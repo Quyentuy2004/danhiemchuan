@@ -34,17 +34,8 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 DHT22_HandleTypeDef dht22;
-typedef struct {
-    char s[64];
-} UartLine_t;
 
-struct __FILE
-{
-  int handle;
-  /* Whatever you require here. If the only file you are using is */
-  /* standard output using printf() for debugging, no file handling */
-  /* is required. */
-};
+
 /* FILE is typedef?d in stdio.h. */
 FILE __stdout;
 //TIM_HandleTypeDef htim2;
@@ -146,14 +137,8 @@ const osMutexAttr_t myMutex03_attributes = {
   .name = "myMutex03"
 };
 /* USER CODE BEGIN PV */
-int fputc(int ch, FILE *f)
-{
-    HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, 100);
-    return ch;
-}
-int quyen=0;
 
-volatile int t1 = 2000, t2 = 1000, t3 = 3000, t4=3000 , t5=1000;
+volatile int t1 = 2000, t2 = 1000, t3 = 3000, t4=3000 , t5=100;
 int  g_period_ms=2000;// BIEN LUU TRU THOI GIAN THUC HIEN CHU KY
 char rxUart;// BIEN NHAN 1 BYTE UART
 static uint8_t  uart_rx_ch;
@@ -222,42 +207,6 @@ static void ProcessCmd(char *line)
 	        myPrintf(&huart2, "OK SET T%d=%dms\r\n", node, per);
 	        return;
 	    }
-	 // het 2
-
-
-	    // donnhiemso1
-//  if (strncmp(line, "PERIOD=", 7) == 0)
-//  {
-//    uint32_t p = (uint32_t)atoi(line + 7);
-//    if (p >= 2000 && p <= 600000)
-//    {
-//      g_period_ms = p;
-//      myPrintf(&huart1," HAL_UART_Transmit... OK:%d\r\n", g_period_ms);
-//    }
-//    else
-//    {
-//    	myPrintf(&huart1," SET PERIOD ERROR\r\n");
-//    	myPrintf(&huart1,"YEU CAU: PERIOD >= 2000 && PERIOD <= 600000\r\n");
-//    }
-//  }
-//  else if (strcmp(line, "SAVE") == 0)
-//  {
-//    // ee_data.magic = CFG_MAGIC;
-//    // ee_data.period_ms = g_period_ms;
-//    // ee_write();
-//    // HAL_UART_Transmit(... "SAVED\r\n")
-//  }
-//  else if (strcmp(line, "LOAD") == 0)
-//  {
-//    // ee_read();
-//    // if (ee_data.magic == CFG_MAGIC) g_period_ms = ee_data.period_ms;
-//    // HAL_UART_Transmit(... "LOADED\r\n")
-//  }
-//  else
-//  {
-//    // HAL_UART_Transmit(... "UNKNOWN\r\n")
-//  }
-   //het 1
 
 
 }
@@ -393,7 +342,6 @@ int main(void)
   qSoilHandle = osMessageQueueNew (4, sizeof(float), &qSoil_attributes);
 
   /* creation of qCmd */
-  qCmdHandle = osMessageQueueNew (5, sizeof(UartLine_t), &qCmd_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -742,7 +690,7 @@ void StartDefaultTask(void *argument)
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
 	uint32_t tick = osKernelGetTickCount();
-	//volatile int t1 = 2000, t2 = 1000, t3 = 3000, t4=3000 , t5=1000;
+
 
 	  /* Infinite loop */
 	  for(;;)
@@ -750,29 +698,19 @@ void StartDefaultTask(void *argument)
 	    tick +=t1;
 
 	    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_15);
-	//    osMutexWait(myMutex01Handle, osWaitForever);
-	    myPrintf(&huart2,"thuc hien task 1\r\n");
-	   // osMutexRelease(myMutex01Handle);
-//	    	 if (DHT22_Read(&dht22, &dht_data) == 0)   // 0 = OK
-//	    		         {
-//	    	//	 myPrintf(&huart1,"DHT22 read success\r\n");
-//
-//	    		         }
-//	    		         else
-//	    		         {
-//	    		      //  	 myPrintf(&huart1,"DHT22 read error\r\n");
-//	    		         }
-//	    osMutexAcquire(myMutex03Handle, osWaitForever);
-//	    DHT22_Read(&dht22, &dht_data);   // cập nhật dht_data
-//	    osMutexRelease(myMutex03Handle);
-	    vTaskSuspendAll();                 // chặn switch task
-	       DHT22_Read(&dht22, &dht_data);     // vẫn cho ngắt hoạt động
-	       xTaskResumeAll();
-	       float temp = dht_data.Temperature;
 
-	          // giữ 1 phần tử: xóa cái cũ rồi gửi cái mới
-//	          osMessageQueueReset(qTempHandle);
-//	          osMessageQueuePut(qTempHandle, &temp, 0, 0);
+	    myPrintf(&huart2,"thuc hien task 1\r\n");
+
+
+	    vTaskSuspendAll();                 // chặn switch task
+	            if (DHT22_Read(&dht22, &dht_data) == 0)   // 0 = OK
+	    	  {
+	    	    	 myPrintf(&huart2,"DHT22 read success\r\n");
+	    	   }
+	    	    else {
+	    	     myPrintf(&huart2,"DHT22 read error\r\n");
+	    	    		         }
+	       xTaskResumeAll();
 			osDelayUntil(tick);
 	  }
   /* USER CODE END 5 */
@@ -789,23 +727,14 @@ void StartTask02(void *argument)
 {
   /* USER CODE BEGIN StartTask02 */
   /* Infinite loop */
-	//volatile int t1 = 2000, t2 = 1000, t3 = 3000, t4=3000 , t5=1000;
 	uint32_t tick = osKernelGetTickCount();
-
-
 		  /* Infinite loop */
 		  for(;;)
 		  {
 		    tick += t2;
-
 		    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_14);
-		  //  osMutexWait(myMutex01Handle, osWaitForever);
 		   	    myPrintf(&huart2,"thuc hien task 2\r\n");
-		   	   // osMutexRelease(myMutex01Handle);
 		   	  soil = Soil_ReadRaw(&soil_cfg);
-
-//		   	    osMessageQueueReset(qSoilHandle);
-//		   	    osMessageQueuePut(qSoilHandle, &soil, 0, 0);
 				osDelayUntil(tick);
 		  }
   /* USER CODE END StartTask02 */
@@ -823,22 +752,13 @@ void StartTask03(void *argument)
   /* USER CODE BEGIN StartTask03 */
   /* Infinite loop */
 	uint32_t tick = osKernelGetTickCount();
-	//volatile int t1 = 2000, t2 = 1000, t3 = 3000, t4=3000 , t5=1000;
-//	static float lastTemp = 0.0f;
-//	static float lastSoil = 0.0f;
 			  /* Infinite loop */
 			  for(;;)
 			  {
 			    tick += t3;
-			    // đọc giá trị mới nhất nếu có
-//			   			       osMessageQueueGet(qTempHandle, &lastTemp, NULL, 0);
-//			   			       osMessageQueueGet(qSoilHandle, &lastSoil, NULL, 0);
-			  //  osMutexWait(myMutex01Handle, osWaitForever);
 			    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
-
 			    myPrintf(&huart2,"thuc hien task 3\r\n");
 			    	 myPrintf(&huart2,"Temp: %.2f C, Soil: %.2f %%\r\n", dht_data.Temperature,soil);
-			    	// osMutexRelease(myMutex01Handle);
 					osDelayUntil(tick);
 			  }
   /* USER CODE END StartTask03 */
@@ -856,23 +776,15 @@ void StartTask04(void *argument)
   /* USER CODE BEGIN StartTask04 */
   /* Infinite loop */
 	uint32_t tick = osKernelGetTickCount();
-//	volatile int t1 = 2000, t2 = 1000, t3 = 3000, t4=3000 , t5=1000;
 	static float lastTemp = 0.0f;
 	static float lastSoil = 0.0f;
 			  /* Infinite loop */
 			  for(;;)
 			  {
 			    tick += t4;
-			    quyen+=1;
+
 			    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-			  // printf("Khoi tao AHT30 thanh cong\r\n");
-
-			  //  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_13);
-
 			    myPrintf(&huart2,"thuc hien task 4\r\n");
-			    // đọc giá trị mới nhất nếu có
-//			       osMessageQueueGet(qTempHandle, &lastTemp, NULL, 0);
-//			       osMessageQueueGet(qSoilHandle, &lastSoil, NULL, 0);
 			    char temp_soil[20];
 			    char period[20];
 
@@ -915,24 +827,18 @@ void StartTask05(void *argument)
   /* USER CODE BEGIN StartTask05 */
   /* Infinite loop */
 	uint32_t tick = osKernelGetTickCount();
-	//volatile int t1 = 2000, t2 = 1000, t3 = 3000, t4=3000 , t5=1000;
-	  //UartLine_t line;
 			  /* Infinite loop */
 			  for(;;)
 			  {
 			    tick += t5;
-
-			  //  osMutexWait(myMutex01Handle, osWaitForever);
-			    		   	    myPrintf(&huart2,"thuc hien task 5\r\n");
-			    		   //	 myPrintf(&huart1,"thuc hien task 5\r\n");
-			    		   	 	if (uart_line_ready)
-			    		   	 	  {
-			    		   	 		myPrintf(&huart2,"vao task DA NHAN DC CHUOI\r\n");
-			    		   	 	    uart_line_ready = 0;
-			    		   	 	    ProcessCmd(uart_line);  // xử lý lệnh
-			    		   	 	    uart_line_len = 0;      // reset để nhận dòng mới
-			    		   	 	  }
-					osDelayUntil(tick);
+			   	myPrintf(&huart2,"thuc hien task 5\r\n");
+			    if (uart_line_ready) {
+			       myPrintf(&huart2,"vao task DA NHAN DC CHUOI\r\n");
+			       uart_line_ready = 0;
+			       ProcessCmd(uart_line);  // xử lý lệnh
+			        uart_line_len = 0;      // reset để nhận dòng mới
+			      }
+			   osDelayUntil(tick);
 			  }
   /* USER CODE END StartTask05 */
 }
